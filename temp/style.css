@@ -76,3 +76,68 @@ button:hover {
 
 
 /* ... 之后的 canvas 样式 ... */
+
+
+/* --- 新增：移动端适配样式 --- */
+
+
+/* 默认隐藏手机按钮（电脑上不显示） */
+
+.mobile-controls {
+    display: none;
+    margin-top: 20px;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.middle-row {
+    display: flex;
+    gap: 20px;
+}
+
+.d-pad-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 255, 204, 0.1);
+    border: 2px solid #00ffcc;
+    color: #00ffcc;
+    font-size: 24px;
+    border-radius: 50%;
+    /* 圆形按钮 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    /* 禁止用户长按选中文字 */
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.d-pad-btn:active {
+    background: #00ffcc;
+    color: #000;
+}
+
+
+/* 媒体查询：当屏幕宽度小于 600px 时（即手机模式） */
+
+@media (max-width: 600px) {
+    /* 1. 让画布自动适应屏幕宽度，保持正方形 */
+    canvas {
+        width: 90vw;
+        /* 占屏幕宽度的 90% */
+        height: 90vw;
+        /* 高度也设为 90% 宽，保持正方形 */
+        max-width: 400px;
+        max-height: 400px;
+    }
+    /* 2. 显示控制按钮 */
+    .mobile-controls {
+        display: flex;
+    }
+    /* 3. 稍微调整一下标题大小，防止太挤 */
+    h1 {
+        font-size: 24px;
+    }
+}

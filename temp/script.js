@@ -218,6 +218,47 @@ function keyDownEvent(event) {
     }
 }
 
+// ... 之前的代码 ...
+
+// --- 新增：手机按钮控制逻辑 ---
+
+// 获取四个按钮
+document.getElementById('btnUp').addEventListener('touchstart', function(e) {
+    e.preventDefault(); // 防止点击导致屏幕滚动
+    if (velocityY !== 1) { velocityX = 0;
+        velocityY = -1; }
+});
+
+document.getElementById('btnDown').addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (velocityY !== -1) { velocityX = 0;
+        velocityY = 1; }
+});
+
+document.getElementById('btnLeft').addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (velocityX !== 1) { velocityX = -1;
+        velocityY = 0; }
+});
+
+document.getElementById('btnRight').addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (velocityX !== -1) { velocityX = 1;
+        velocityY = 0; }
+});
+
+// 为了兼容电脑鼠标点击测试，我们也加上 click 事件
+document.getElementById('btnUp').addEventListener('click', () => { if (velocityY !== 1) { velocityX = 0;
+        velocityY = -1; } });
+document.getElementById('btnDown').addEventListener('click', () => { if (velocityY !== -1) { velocityX = 0;
+        velocityY = 1; } });
+document.getElementById('btnLeft').addEventListener('click', () => { if (velocityX !== 1) { velocityX = -1;
+        velocityY = 0; } });
+document.getElementById('btnRight').addEventListener('click', () => { if (velocityX !== -1) { velocityX = 1;
+        velocityY = 0; } });
+
+// ... 你的启动代码 (initSnake...) ...
+
 // 启动游戏
 initSnake();
 isGameRunning = true;
