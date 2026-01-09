@@ -122,22 +122,77 @@ button:hover {
 
 /* 媒体查询：当屏幕宽度小于 600px 时（即手机模式） */
 
+
+/* ------------------------------------------------ */
+
+
+/* 📱 移动端专属适配 (即使是小屏手机也能一屏装下) */
+
+
+/* ------------------------------------------------ */
+
 @media (max-width: 600px) {
-    /* 1. 让画布自动适应屏幕宽度，保持正方形 */
-    canvas {
-        width: 90vw;
-        /* 占屏幕宽度的 90% */
-        height: 90vw;
-        /* 高度也设为 90% 宽，保持正方形 */
-        max-width: 400px;
-        max-height: 400px;
+    /* 1. 全局布局调整：减少空白，防止滚动 */
+    body {
+        padding-top: 20px;
+        align-items: flex-start;
+        /* 让内容从顶部开始排，不要死板居中 */
+        overflow: hidden;
+        /* 禁止页面出现滚动条 */
     }
-    /* 2. 显示控制按钮 */
-    .mobile-controls {
-        display: flex;
+    .game-container {
+        transform: scale(0.9);
+        /* 整体稍微缩小一点点，确保安全距离 */
     }
-    /* 3. 稍微调整一下标题大小，防止太挤 */
+    /* 2. 压缩文字区域 */
     h1 {
         font-size: 24px;
+        /* 标题变小 */
+        margin-bottom: 5px;
+        margin-top: 0;
+    }
+    .score-board,
+    .high-score-board {
+        font-size: 18px;
+        /* 分数变小 */
+        margin-bottom: 5px;
+    }
+    /* 3. 隐藏手机上不需要的内容 */
+    .instruction {
+        display: none;
+        /* 手机不需要看“按WASD控制”这行字 */
+    }
+    /* 4. 核心：画布尺寸优化 */
+    /* 使用 min() 函数：确保画布既不超过宽度的85%，也不超过高度的45% */
+    /* 这样能给下方的按钮留出足够空间 */
+    canvas {
+        width: 85vw;
+        height: 85vw;
+        max-width: 45vh;
+        /* 限制最大高度，防止把按钮挤出去 */
+        max-height: 45vh;
+        box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+        /* 手机上光晕弱一点，提升性能 */
+    }
+    /* 5. 调整按钮区域 */
+    #restartBtn {
+        margin-top: 10px;
+        padding: 8px 20px;
+        font-size: 14px;
+    }
+    .mobile-controls {
+        display: flex;
+        margin-top: 15px;
+        /* 按钮离上面的距离 */
+        gap: 8px;
+        /* 按钮之间的缝隙 */
+    }
+    .d-pad-btn {
+        width: 55px;
+        /* 按钮稍微调小，防止误触 */
+        height: 55px;
+        font-size: 20px;
+        background: rgba(0, 255, 204, 0.05);
+        /* 稍微透明一点，不遮挡视线 */
     }
 }
