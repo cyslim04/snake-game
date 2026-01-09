@@ -1,6 +1,14 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
+// --- 新增：加载音效 ---
+
+
+
+// 如果您下载了文件，请用 './eat.mp3'；如果没下载，可以用下面的网络链接测试
+const eatSound = new Audio('https://s3.amazonaws.com/freecodecamp/drums/Heater-1.mp3');
+const overSound = new Audio('https://s3.amazonaws.com/freecodecamp/drums/Heater-6.mp3');
+
 
 // 游戏配置
 const gridSize = 20;
@@ -58,8 +66,14 @@ function update() {
 
     // 3. 吃食物检测
     if (head.x === food.x && head.y === food.y) {
+
+        // 播放吃食物音效
+        eatSound.currentTime = 0;
+        eatSound.play();
+
         score += 10;
         scoreElement.innerText = score;
+
         // 稍微加快速度增加难度
         if (score % 50 === 0) speed += 0.5;
         placeFood();
@@ -67,6 +81,7 @@ function update() {
         // 没吃到食物，移除尾巴（保持长度不变）
         snake.pop();
     }
+
 }
 
 function draw() {
@@ -119,6 +134,10 @@ function placeFood() {
 }
 
 function gameOver() {
+
+    // --- 新增：播放结束音效 ---
+    overSound.play();
+
     isGameRunning = false;
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
