@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>霓虹贪吃蛇 | Neon Snake</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="ui-panel">
+            <h1>NEON SNAKE</h1>
+            <div class="score-board">
+                SCORE: <span id="score">0</span>
+            </div>
+            <p class="instruction">使用方向键或 WASD 控制</p>
+        </div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <button id="restartBtn" onclick="resetGame()">RESTART GAME</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

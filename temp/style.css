@@ -1,0 +1,64 @@
+body {
+    background-color: #0d0d0d;
+    /* 深黑背景 */
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.game-container {
+    text-align: center;
+}
+
+h1 {
+    color: #00ffcc;
+    text-shadow: 0 0 10px #00ffcc;
+    letter-spacing: 5px;
+    margin-bottom: 10px;
+}
+
+.score-board {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #ff00de;
+    text-shadow: 0 0 5px #ff00de;
+}
+
+canvas {
+    background-color: #1a1a1a;
+    border: 2px solid #333;
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+    /* 画布发光 */
+    display: block;
+    margin: 0 auto;
+    border-radius: 4px;
+}
+
+.instruction {
+    color: #888;
+    font-size: 12px;
+    margin-bottom: 20px;
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px 30px;
+    background: transparent;
+    border: 2px solid #00ffcc;
+    color: #00ffcc;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+}
+
+button:hover {
+    background: #00ffcc;
+    color: #000;
+    box-shadow: 0 0 20px #00ffcc;
+}
