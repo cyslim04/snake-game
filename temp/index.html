@@ -23,7 +23,21 @@
 
         <canvas id="gameCanvas" width="400" height="400"></canvas>
 
-        <button id="restartBtn" onclick="resetGame()">RESTART GAME</button>
+        <div id="startScreen" class="overlay">
+            <h2>READY?</h2>
+            <p>按开始按钮进入游戏</p>
+            <button class="big-btn" onclick="startGame()">START GAME</button>
+        </div>
+
+        <div id="gameOverScreen" class="overlay" style="display: none;">
+            <h2 style="color: #ff0055">GAME OVER</h2>
+            <p>YOUR SCORE: <span id="finalScore">0</span></p>
+            <button class="big-btn" onclick="startGame()">TRY AGAIN</button>
+        </div>
+        <div class="controls-row">
+            <button id="pauseBtn" onclick="togglePause()">PAUSE</button>
+            <button id="restartBtn" onclick="startGame()">RESTART</button>
+        </div>
 
         <div class="mobile-controls">
             <button class="d-pad-btn" id="btnUp">↑</button>

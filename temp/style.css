@@ -196,3 +196,96 @@ button:hover {
         /* 稍微透明一点，不遮挡视线 */
     }
 }
+
+
+/* --- 新增：UI 弹窗样式 --- */
+
+
+/* 必须给容器加 relative，这样弹窗才能相对于它定位 */
+
+.game-container {
+    position: relative;
+    max-width: 100%;
+    /* 防止手机上撑破屏幕 */
+}
+
+
+/* 弹窗遮罩层 */
+
+.overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* 完美居中 */
+    width: 400px;
+    /* 和画布一样宽 */
+    height: 400px;
+    /* 和画布一样高 */
+    background: rgba(0, 0, 0, 0.85);
+    /* 85%透明度的黑色背景 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    /* 保证在画布上面 */
+    border: 2px solid #333;
+}
+
+
+/* 弹窗里的文字 */
+
+.overlay h2 {
+    font-size: 40px;
+    color: #00ffcc;
+    text-shadow: 0 0 20px #00ffcc;
+    margin-bottom: 10px;
+}
+
+.overlay p {
+    font-size: 18px;
+    color: #fff;
+    margin-bottom: 30px;
+}
+
+
+/* 大号按钮样式 */
+
+.big-btn {
+    padding: 15px 40px;
+    font-size: 20px;
+    background: #00ffcc;
+    color: #000;
+    border: none;
+    cursor: pointer;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    box-shadow: 0 0 15px #00ffcc;
+    transition: transform 0.2s;
+}
+
+.big-btn:hover {
+    transform: scale(1.1);
+    /* 鼠标放上去变大一点 */
+    background: #fff;
+}
+
+.controls-row {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+
+/* 手机适配调整：弹窗也要跟着变小 */
+
+@media (max-width: 600px) {
+    .overlay {
+        width: 90vw;
+        height: 90vw;
+        max-width: 400px;
+        max-height: 400px;
+    }
+}

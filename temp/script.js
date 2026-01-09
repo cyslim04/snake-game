@@ -1,18 +1,22 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
-// --- 新增：获取最高分显示的 HTML 元素 ---
 const highScoreElement = document.getElementById('highScore');
+const pauseBtn = document.getElementById('pauseBtn');
 
-// --- 音效加载 ---
-// 使用在线音效链接 (如果以后想换，就把 url 换成你的本地文件路径，如 './eat.mp3')
+// UI 元素
+const startScreen = document.getElementById('startScreen');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const finalScoreElement = document.getElementById('finalScore');
+
+// 音效
 const eatSound = new Audio('https://s3.amazonaws.com/freecodecamp/drums/Heater-1.mp3');
 const overSound = new Audio('https://s3.amazonaws.com/freecodecamp/drums/Heater-6.mp3');
 
 // 游戏配置
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
-let speed = 7; // 初始速度
+let speed = 7;
 
 // 游戏状态
 let score = 0;
@@ -21,245 +25,277 @@ let velocityY = 0;
 let snake = [];
 let food = { x: 5, y: 5 };
 let isGameRunning = false;
+let isPaused = false;
+let canChangeDirection = true; // 方向锁
 
-// --- 新增：初始化最高分逻辑 ---
-// 1. 尝试从浏览器缓存(localStorage)里读取 'snakeHighScore'
-// 2. 如果读取不到（第一次玩），就默认为 0
-let highScore = localStorage.getItem('snakeHighScore') || 0;
-// 3. 游戏加载时，马上把最高分显示在界面上
-if (highScoreElement) {
-    highScoreElement.innerText = highScore;
+// --- 新增：粒子数组 ---
+let particles = [];
+
+// 最高分初始化
+let highScore = 0;
+try {
+    highScore = localStorage.getItem('snakeHighScore') || 0;
+} catch (e) {}
+if (highScoreElement) highScoreElement.innerText = highScore;
+
+function initSnake() {
+    snake = [{ x: 10, y: 10 }, { x: 10, y: 11 }, { x: 10, y: 12 }];
+    velocityX = 0;
+    velocityY = -1;
+    canChangeDirection = true;
+    particles = []; // 重置粒子
 }
 
-// 初始化蛇的位置
-function initSnake() {
-    snake = [
-        { x: 10, y: 10 }, // 头
-        { x: 10, y: 11 }, // 身体
-        { x: 10, y: 12 } // 尾巴
-    ];
-    velocityX = 0;
-    velocityY = -1; // 默认向上移动
+function startGame() {
+    startScreen.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+    score = 0;
+    speed = 7;
+    scoreElement.innerText = score;
+    isPaused = false;
+    if (pauseBtn) pauseBtn.innerText = "PAUSE";
+    initSnake();
+    placeFood();
+    isGameRunning = true;
+    gameLoop();
 }
 
 function gameLoop() {
-    update();
+    if (!isGameRunning) return;
+
+    if (!isPaused) {
+        update();
+    }
+
     draw();
-    if (isGameRunning) {
-        setTimeout(gameLoop, 1000 / speed);
+
+    if (isPaused) {
+        // 暂停遮罩
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = '30px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2);
+    }
+
+    setTimeout(gameLoop, 1000 / speed);
+}
+
+function togglePause() {
+    if (!isGameRunning) return;
+    isPaused = !isPaused;
+    if (pauseBtn) pauseBtn.innerText = isPaused ? "RESUME" : "PAUSE";
+}
+
+// --- 新增：粒子类与相关函数 ---
+class Particle {
+    constructor(x, y, color) {
+        this.x = x * gridSize + gridSize / 2; // 像素坐标中心
+        this.y = y * gridSize + gridSize / 2;
+        // 随机爆炸速度
+        this.vx = (Math.random() - 0.5) * 4;
+        this.vy = (Math.random() - 0.5) * 4;
+        this.life = 1.0; // 透明度/生命值 (1.0 -> 0)
+        this.color = color;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life -= 0.03; // 每次变淡一点
+    }
+
+    draw(ctx) {
+        ctx.globalAlpha = Math.max(0, this.life); // 设置透明度
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, 6, 6); // 绘制小碎片
+        ctx.globalAlpha = 1.0; // 恢复画笔透明度
+    }
+}
+
+function createExplosion(x, y, color) {
+    // 每次产生 15 个粒子
+    for (let i = 0; i < 15; i++) {
+        particles.push(new Particle(x, y, color));
     }
 }
 
 function update() {
-    // 移动蛇头
+    // 1. 更新蛇
     const head = { x: snake[0].x + velocityX, y: snake[0].y + velocityY };
 
-    // 1. 撞墙检测
-    if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+    if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.some(part => part.x === head.x && part.y === head.y)) {
         gameOver();
         return;
     }
 
-    // 2. 撞自己检测
-    for (let part of snake) {
-        if (head.x === part.x && head.y === part.y) {
-            gameOver();
-            return;
-        }
-    }
-
-    // 将新头加入数组
     snake.unshift(head);
 
-    // 3. 吃食物检测
     if (head.x === food.x && head.y === food.y) {
-        // --- 播放音效 ---
-        eatSound.currentTime = 0; // 重置进度，防止快速吃的时候声音卡顿
+        eatSound.currentTime = 0;
         eatSound.play();
-
-        // --- 更新分数 ---
         score += 10;
         scoreElement.innerText = score;
 
-        // --- 新增：更新最高分逻辑 ---
+        // --- 特效：触发粒子爆炸 ---
+        createExplosion(food.x, food.y, '#ff00de');
+
         if (score > highScore) {
             highScore = score;
-            // 更新页面显示
-            if (highScoreElement) {
-                highScoreElement.innerText = highScore;
-            }
-            // 保存到浏览器缓存，下次刷新还在
-            localStorage.setItem('snakeHighScore', highScore);
+            if (highScoreElement) highScoreElement.innerText = highScore;
+            try { localStorage.setItem('snakeHighScore', highScore); } catch (e) {}
         }
-
-        // 稍微加快速度增加难度
         if (score % 50 === 0) speed += 0.5;
         placeFood();
     } else {
-        // 没吃到食物，移除尾巴（保持长度不变）
         snake.pop();
+    }
+
+    // 2. 更新粒子状态
+    particles.forEach((p, index) => {
+        p.update();
+        if (p.life <= 0) particles.splice(index, 1); // 粒子消失后移除
+    });
+
+    canChangeDirection = true;
+}
+
+// --- 新增：画网格背景 ---
+function drawGrid() {
+    ctx.strokeStyle = '#222'; // 很暗的灰色线条
+    ctx.lineWidth = 1;
+
+    // 画竖线
+    for (let x = 0; x <= canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+    }
+    // 画横线
+    for (let y = 0; y <= canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
     }
 }
 
 function draw() {
-    // 清空画布
-    ctx.fillStyle = '#1a1a1a';
+    // 清空背景
+    ctx.fillStyle = '#0d0d0d'; // 使用深黑偏灰背景，更有质感
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 画蛇
+    // 1. 画网格
+    drawGrid();
+
+    // 2. 画粒子
+    particles.forEach(p => p.draw(ctx));
+
+    // 3. 画蛇 (带渐变色)
     for (let i = 0; i < snake.length; i++) {
         let part = snake[i];
 
-        // 头部特殊颜色
+        // 头部
         if (i === 0) {
-            ctx.fillStyle = '#00ffcc'; // 霓虹青色
-            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#00ffcc';
+            ctx.shadowBlur = 20;
             ctx.shadowColor = '#00ffcc';
         } else {
-            ctx.fillStyle = '#00ccaa'; // 稍微暗一点的青色
+            // 身体：根据位置计算渐变色 (HSL 颜色模式)
+            // 颜色会随着身体长度从青色渐渐变成蓝色/紫色
+            let hue = 160 + (i * 2);
+            ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
             ctx.shadowBlur = 0;
         }
 
+        // 稍微画小一点点，留出缝隙，看起来更精致
         ctx.fillRect(part.x * gridSize + 1, part.y * gridSize + 1, gridSize - 2, gridSize - 2);
     }
 
-    // 画食物
-    ctx.fillStyle = '#ff00de'; // 霓虹粉色
-    ctx.shadowBlur = 15;
+    // 重置发光，防止影响其他元素
+    ctx.shadowBlur = 0;
+
+    // 4. 画食物 (带呼吸灯效果)
+    // 利用当前时间戳产生一个闪烁的 alpha 值
+    let glow = Math.abs(Math.sin(Date.now() / 200));
+    ctx.fillStyle = '#ff00de';
+    ctx.shadowBlur = 15 + glow * 10; // 光圈大小随时间呼吸
     ctx.shadowColor = '#ff00de';
     ctx.fillRect(food.x * gridSize + 1, food.y * gridSize + 1, gridSize - 2, gridSize - 2);
 
-    // 重置阴影效果避免影响背景
     ctx.shadowBlur = 0;
 }
 
 function placeFood() {
-    // 随机生成食物，避免生成在蛇身上
     let valid = false;
     while (!valid) {
         food.x = Math.floor(Math.random() * tileCount);
         food.y = Math.floor(Math.random() * tileCount);
-
         valid = true;
         for (let part of snake) {
-            if (part.x === food.x && part.y === food.y) {
-                valid = false;
-                break;
-            }
+            if (part.x === food.x && part.y === food.y) { valid = false; break; }
         }
     }
 }
 
 function gameOver() {
-    // --- 播放结束音效 ---
     overSound.play();
-
     isGameRunning = false;
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = '#fff';
-    ctx.font = '40px Courier New';
-    ctx.textAlign = 'center';
-    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
-
-    // 显示本局得分
-    ctx.font = '20px Courier New';
-    ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 40);
+    finalScoreElement.innerText = score;
+    gameOverScreen.style.display = 'flex';
 }
 
-function resetGame() {
-    score = 0;
-    speed = 7;
-    scoreElement.innerText = score;
-    initSnake();
-    placeFood();
+document.addEventListener('keydown', e => {
+    if ([32, 37, 38, 39, 40].includes(e.keyCode)) e.preventDefault();
+    if (e.keyCode === 32) togglePause();
+    if (isPaused) return;
+    if (!canChangeDirection) return;
 
-    // 重置后也确保最高分显示正确（防止意外情况）
-    highScore = localStorage.getItem('snakeHighScore') || 0;
-    if (highScoreElement) {
-        highScoreElement.innerText = highScore;
-    }
-
-    if (!isGameRunning) {
-        isGameRunning = true;
-        gameLoop();
-    }
-}
-
-// 键盘控制
-document.addEventListener('keydown', keyDownEvent);
-
-function keyDownEvent(event) {
-    // 防止按键导致页面滚动
-    if ([37, 38, 39, 40].indexOf(event.keyCode) > -1) {
-        event.preventDefault();
-    }
-
-    // 左 (37) A (65)
-    if ((event.keyCode === 37 || event.keyCode === 65) && velocityX !== 1) {
+    if ((e.keyCode === 37 || e.keyCode === 65) && velocityX !== 1) {
         velocityX = -1;
         velocityY = 0;
-    }
-    // 上 (38) W (87)
-    else if ((event.keyCode === 38 || event.keyCode === 87) && velocityY !== 1) {
+        canChangeDirection = false;
+    } else if ((e.keyCode === 38 || e.keyCode === 87) && velocityY !== 1) {
         velocityX = 0;
         velocityY = -1;
-    }
-    // 右 (39) D (68)
-    else if ((event.keyCode === 39 || event.keyCode === 68) && velocityX !== -1) {
+        canChangeDirection = false;
+    } else if ((e.keyCode === 39 || e.keyCode === 68) && velocityX !== -1) {
         velocityX = 1;
         velocityY = 0;
-    }
-    // 下 (40) S (83)
-    else if ((event.keyCode === 40 || event.keyCode === 83) && velocityY !== -1) {
+        canChangeDirection = false;
+    } else if ((e.keyCode === 40 || e.keyCode === 83) && velocityY !== -1) {
         velocityX = 0;
         velocityY = 1;
+        canChangeDirection = false;
+    }
+});
+
+function addTouch(id, fn) {
+    const btn = document.getElementById(id);
+    if (btn) {
+        const h = (e) => {
+            e.preventDefault();
+            if (!isPaused && isGameRunning && canChangeDirection) {
+                fn();
+                canChangeDirection = false;
+            }
+        };
+        btn.addEventListener('touchstart', h);
+        btn.addEventListener('click', h);
     }
 }
-
-// ... 之前的代码 ...
-
-// --- 新增：手机按钮控制逻辑 ---
-
-// 获取四个按钮
-document.getElementById('btnUp').addEventListener('touchstart', function(e) {
-    e.preventDefault(); // 防止点击导致屏幕滚动
-    if (velocityY !== 1) { velocityX = 0;
-        velocityY = -1; }
-});
-
-document.getElementById('btnDown').addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    if (velocityY !== -1) { velocityX = 0;
-        velocityY = 1; }
-});
-
-document.getElementById('btnLeft').addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    if (velocityX !== 1) { velocityX = -1;
-        velocityY = 0; }
-});
-
-document.getElementById('btnRight').addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    if (velocityX !== -1) { velocityX = 1;
-        velocityY = 0; }
-});
-
-// 为了兼容电脑鼠标点击测试，我们也加上 click 事件
-document.getElementById('btnUp').addEventListener('click', () => { if (velocityY !== 1) { velocityX = 0;
+addTouch('btnUp', () => { if (velocityY !== 1) { velocityX = 0;
         velocityY = -1; } });
-document.getElementById('btnDown').addEventListener('click', () => { if (velocityY !== -1) { velocityX = 0;
+addTouch('btnDown', () => { if (velocityY !== -1) { velocityX = 0;
         velocityY = 1; } });
-document.getElementById('btnLeft').addEventListener('click', () => { if (velocityX !== 1) { velocityX = -1;
+addTouch('btnLeft', () => { if (velocityX !== 1) { velocityX = -1;
         velocityY = 0; } });
-document.getElementById('btnRight').addEventListener('click', () => { if (velocityX !== -1) { velocityX = 1;
+addTouch('btnRight', () => { if (velocityX !== -1) { velocityX = 1;
         velocityY = 0; } });
 
-// ... 你的启动代码 (initSnake...) ...
-
-// 启动游戏
-initSnake();
-isGameRunning = true;
-gameLoop();
+// 初始静态绘制
+ctx.fillStyle = '#0d0d0d';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+drawGrid();
