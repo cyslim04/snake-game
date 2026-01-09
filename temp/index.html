@@ -9,16 +9,15 @@
 </head>
 
 <body>
-    <div class="game-container">
-        <div class="ui-panel">
-            <h1>NEON SNAKE</h1>
-            <div class="score-board">
-                SCORE: <span id="score">0</span>
-            </div>
-            <p class="instruction">使用方向键或 WASD 控制</p>
+    <div class="ui-panel">
+        <h1>NEON SNAKE</h1>
+        <div class="score-board">
+            SCORE: <span id="score">0</span>
         </div>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <button id="restartBtn" onclick="resetGame()">RESTART GAME</button>
+        <div class="high-score-board">
+            BEST: <span id="highScore">0</span>
+        </div>
+        <p class="instruction">使用方向键或 WASD 控制</p>
     </div>
     <script src="script.js"></script>
 </body>

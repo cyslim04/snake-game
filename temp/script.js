@@ -1,14 +1,13 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
-// --- 新增：加载音效 ---
+// --- 新增：获取最高分显示的 HTML 元素 ---
+const highScoreElement = document.getElementById('highScore');
 
-
-
-// 如果您下载了文件，请用 './eat.mp3'；如果没下载，可以用下面的网络链接测试
+// --- 音效加载 ---
+// 使用在线音效链接 (如果以后想换，就把 url 换成你的本地文件路径，如 './eat.mp3')
 const eatSound = new Audio('https://s3.amazonaws.com/freecodecamp/drums/Heater-1.mp3');
 const overSound = new Audio('https://s3.amazonaws.com/freecodecamp/drums/Heater-6.mp3');
-
 
 // 游戏配置
 const gridSize = 20;
@@ -21,8 +20,16 @@ let velocityX = 0;
 let velocityY = 0;
 let snake = [];
 let food = { x: 5, y: 5 };
-let gameInterval;
 let isGameRunning = false;
+
+// --- 新增：初始化最高分逻辑 ---
+// 1. 尝试从浏览器缓存(localStorage)里读取 'snakeHighScore'
+// 2. 如果读取不到（第一次玩），就默认为 0
+let highScore = localStorage.getItem('snakeHighScore') || 0;
+// 3. 游戏加载时，马上把最高分显示在界面上
+if (highScoreElement) {
+    highScoreElement.innerText = highScore;
+}
 
 // 初始化蛇的位置
 function initSnake() {
@@ -66,13 +73,24 @@ function update() {
 
     // 3. 吃食物检测
     if (head.x === food.x && head.y === food.y) {
-
-        // 播放吃食物音效
-        eatSound.currentTime = 0;
+        // --- 播放音效 ---
+        eatSound.currentTime = 0; // 重置进度，防止快速吃的时候声音卡顿
         eatSound.play();
 
+        // --- 更新分数 ---
         score += 10;
         scoreElement.innerText = score;
+
+        // --- 新增：更新最高分逻辑 ---
+        if (score > highScore) {
+            highScore = score;
+            // 更新页面显示
+            if (highScoreElement) {
+                highScoreElement.innerText = highScore;
+            }
+            // 保存到浏览器缓存，下次刷新还在
+            localStorage.setItem('snakeHighScore', highScore);
+        }
 
         // 稍微加快速度增加难度
         if (score % 50 === 0) speed += 0.5;
@@ -81,7 +99,6 @@ function update() {
         // 没吃到食物，移除尾巴（保持长度不变）
         snake.pop();
     }
-
 }
 
 function draw() {
@@ -134,8 +151,7 @@ function placeFood() {
 }
 
 function gameOver() {
-
-    // --- 新增：播放结束音效 ---
+    // --- 播放结束音效 ---
     overSound.play();
 
     isGameRunning = false;
@@ -146,6 +162,10 @@ function gameOver() {
     ctx.font = '40px Courier New';
     ctx.textAlign = 'center';
     ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
+
+    // 显示本局得分
+    ctx.font = '20px Courier New';
+    ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 40);
 }
 
 function resetGame() {
@@ -154,6 +174,13 @@ function resetGame() {
     scoreElement.innerText = score;
     initSnake();
     placeFood();
+
+    // 重置后也确保最高分显示正确（防止意外情况）
+    highScore = localStorage.getItem('snakeHighScore') || 0;
+    if (highScoreElement) {
+        highScoreElement.innerText = highScore;
+    }
+
     if (!isGameRunning) {
         isGameRunning = true;
         gameLoop();
